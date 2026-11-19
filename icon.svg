@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#4338ca"/>
+  <rect x="20" y="20" width="472" height="472" rx="96" stroke="#818cf8" stroke-width="8" stroke-opacity="0.6"/>
+  <!-- Graduation Cap -->
+  <polygon points="256,150 420,225 256,300 92,225" fill="#ffffff"/>
+  <path d="M166,257 v46 c0,40 40,70 90,70 s90,-30 90,-70 v-46" fill="#e0e7ff"/>
+  <!-- Tassel -->
+  <path d="M395,248 L415,315" stroke="#f59e0b" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="415" cy="325" r="14" fill="#f59e0b"/>
+  <!-- Open Book -->
+  <path d="M120,360 L246,340 L246,430 L120,448 Z" fill="#ffffff" fill-opacity="0.95"/>
+  <path d="M392,360 L266,340 L266,430 L392,448 Z" fill="#ffffff" fill-opacity="0.95"/>
+</svg>

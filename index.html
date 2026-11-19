@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CourseVault — All-in-One Course Tracker</title>
+  <meta name="description" content="Local-first online course tracker with cloud sync, progress tracking, and notes across all your devices." />
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4338ca" id="meta-theme-color" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="CourseVault" />
+  
+  <!-- App Icons -->
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="alternate icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    .modal-card {
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased transition-colors duration-200">
+
+  <!-- Top Header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3">
+      <!-- App Brand Logo -->
+      <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">CourseVault</h1>
+            <span class="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800">v3</span>
+          </div>
+          <p class="hidden sm:block text-xs text-slate-500 dark:text-slate-400">Local-first course tracker with cloud sync</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Cloud Sync Status Button -->
+        <button id="btn-cloud-sync" type="button" title="Configure Google Sheets Cloud Sync" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:py-2 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="sync-status-label" class="hidden xs:inline">Cloud Sync</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="btn-theme-toggle" type="button" title="Toggle Dark/Light Mode" class="p-1.5 sm:p-2 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+          <svg id="icon-sun" class="hidden w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+
+        <!-- Desktop Only Backup & Import Buttons -->
+        <div class="hidden md:flex items-center gap-1.5 sm:gap-2">
+          <button id="btn-export-json" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Export JSON</span>
+          </button>
+
+          <button id="btn-export-csv" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Export CSV</span>
+          </button>
+
+          <button id="btn-import-json" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span>Import JSON</span>
+          </button>
+        </div>
+
+        <!-- Mobile More Menu Dropdown Button -->
+        <div class="relative md:hidden">
+          <button id="btn-mobile-more" type="button" title="More Tools & Backups" class="p-1.5 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+          
+          <!-- Dropdown Popup -->
+          <div id="mobile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50">
+            <button id="btn-mobile-export-json" type="button" class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export JSON Backup
+            </button>
+            <button id="btn-mobile-export-csv" type="button" class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Export CSV Spreadsheet
+            </button>
+            <button id="btn-mobile-import-json" type="button" class="w-full text-left px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              Import JSON Backup
+            </button>
+          </div>
+        </div>
+
+        <input id="input-import-file" type="file" accept=".json,application/json" class="hidden" />
+
+        <!-- Add Course Button -->
+        <button id="btn-add-course" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="hidden xs:inline">Add Course</span>
+          <span class="xs:hidden">Add</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
+
+    <!-- Backup Health Nudge Banner -->
+    <div id="backup-banner" class="hidden flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/70 text-xs text-amber-800 dark:text-amber-200">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span id="backup-banner-text">Your courses are stored locally. Export a JSON backup or enable Cloud Sync so you never lose them.</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-banner-backup" type="button" class="px-2.5 py-1 font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-md transition">Backup Now</button>
+        <button id="btn-banner-dismiss" type="button" title="Dismiss" class="p-1 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 rounded">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Row (Responsive for phones, tablets & desktops) -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-sm">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Courses</p>
+        <p id="stat-total" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5 sm:mt-1">0</p>
+      </div>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-sm">
+        <p class="text-xs font-medium text-amber-600 dark:text-amber-400">In Progress</p>
+        <p id="stat-in-progress" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5 sm:mt-1">0</p>
+      </div>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-sm">
+        <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Completed</p>
+        <p id="stat-completed" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5 sm:mt-1">0</p>
+      </div>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-sm">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Not Started</p>
+        <p id="stat-not-started" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5 sm:mt-1">0</p>
+      </div>
+      <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-sm">
+        <p class="text-xs font-medium text-indigo-600 dark:text-indigo-400">Pinned Focus</p>
+        <p id="stat-pinned" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5 sm:mt-1">0</p>
+      </div>
+    </section>
+
+    <!-- Search & Filter Controls -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 sm:p-4 shadow-sm space-y-3">
+      <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input id="search-input" type="text" placeholder="Search courses, platforms, hints, or notes... (Press /)" class="w-full pl-10 pr-9 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition" />
+          <button id="btn-clear-search" type="button" title="Clear search" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:flex items-center gap-2">
+          <!-- Platform Filter -->
+          <select id="filter-platform" class="w-full sm:w-auto px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="ALL">All Platforms</option>
+          </select>
+
+          <!-- Sort Select -->
+          <select id="sort-select" class="w-full sm:w-auto px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="newest">Pinned + Newest</option>
+            <option value="deadline-asc">Deadline: Soonest</option>
+            <option value="progress-desc">Progress: High to Low</option>
+            <option value="title-asc">Title: A to Z</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Status Pills -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+        <div id="status-pills" class="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
+          <button data-status="ALL" type="button" class="status-pill px-3 py-1.5 rounded-full text-xs font-medium transition bg-indigo-600 text-white">All</button>
+          <button data-status="PINNED" type="button" class="status-pill px-3 py-1.5 rounded-full text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Pinned</button>
+          <button data-status="In Progress" type="button" class="status-pill px-3 py-1.5 rounded-full text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">In Progress</button>
+          <button data-status="Not Started" type="button" class="status-pill px-3 py-1.5 rounded-full text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Not Started</button>
+          <button data-status="Completed" type="button" class="status-pill px-3 py-1.5 rounded-full text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Completed</button>
+          <button data-status="Paused" type="button" class="status-pill px-3 py-1.5 rounded-full text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Paused</button>
+        </div>
+
+        <span id="results-count" class="text-xs text-slate-500 dark:text-slate-400">0 courses</span>
+      </div>
+    </section>
+
+    <!-- Course Grid -->
+    <section id="course-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4"></section>
+
+    <!-- Empty State -->
+    <section id="empty-state" class="hidden bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 sm:p-10 text-center space-y-3">
+      <div class="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </div>
+      <h2 class="text-base font-semibold text-slate-900 dark:text-white">No matching courses found</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">Try clearing your filters or add a new course to keep everything organized in one place.</p>
+      <div class="pt-1 flex justify-center gap-2">
+        <button id="btn-reset-filters" type="button" class="px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">Reset Filters</button>
+        <button id="btn-empty-add" type="button" class="px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">Add New Course</button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-2 pb-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <p id="footer-backup-status">Local-first + Google Sheets cloud sync • Shortcuts: <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px]">/</kbd> Search, <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px]">N</kbd> New, <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px]">Esc</kbd> Close</p>
+      <p>Store only login hints (e.g. "Personal Gmail"), never raw passwords.</p>
+    </footer>
+
+  </main>
+
+  <!-- Cloud Sync Settings Modal -->
+  <div id="sync-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="modal-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-lg max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 dark:text-white">Google Sheets Cloud Sync</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Auto-sync courses across laptop, phone &amp; tablet</p>
+        </div>
+        <button id="btn-close-sync" type="button" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="sync-form" class="p-5 space-y-4">
+        <div id="sync-feedback" class="hidden px-3 py-2 rounded-lg text-xs font-medium"></div>
+
+        <div>
+          <label for="sync-url-input" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Google Apps Script Web App URL *</label>
+          <input id="sync-url-input" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label for="sync-token-input" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Secret Sync Token *</label>
+          <input id="sync-token-input" type="password" placeholder="Passphrase you set in your Apps Script" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <p class="text-[11px] text-slate-400 mt-1">Saved securely in this device's storage. Enter the same URL &amp; token on all your devices.</p>
+        </div>
+
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input id="sync-auto-checkbox" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+          <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Auto-sync on load &amp; whenever I save changes</span>
+        </label>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <button id="btn-sync-now" type="button" class="px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/70 transition">Sync Now</button>
+            <button id="btn-sync-disconnect" type="button" class="px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition">Disconnect</button>
+          </div>
+          <button type="submit" class="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">Save &amp; Connect</button>
+        </div>
+
+        <!-- Built-in Setup Helper -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Need the Google Apps Script code?</span>
+            <button id="btn-copy-apps-script" type="button" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Copy Apps Script</button>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">In a blank Google Sheet, go to <strong>Extensions → Apps Script</strong>, paste the script code, set your secret password, deploy as Web App (Access: Anyone), and paste the URL here.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add / Edit Course Modal -->
+  <div id="course-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="modal-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-lg max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+        <h2 id="modal-title" class="text-base font-bold text-slate-900 dark:text-white">Add New Course</h2>
+        <button id="btn-close-modal" type="button" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="course-form" class="p-5 space-y-4">
+        <input type="hidden" id="field-id" />
+
+        <!-- URL First for Auto-Detect -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label for="field-url" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Course Link (URL) *</label>
+            <span id="url-detect-badge" class="hidden text-[11px] font-medium text-emerald-600 dark:text-emerald-400">Platform detected</span>
+          </div>
+          <input id="field-url" type="url" required placeholder="Paste course URL — e.g. https://coursera.org/..." class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label for="field-title" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Course Name *</label>
+          <input id="field-title" type="text" required placeholder="e.g. Machine Learning Specialization" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="field-platform" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Platform *</label>
+            <select id="field-platform" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Udemy">Udemy</option>
+              <option value="Coursera">Coursera</option>
+              <option value="YouTube">YouTube</option>
+              <option value="NPTEL">NPTEL</option>
+              <option value="edX">edX</option>
+              <option value="Skillshare">Skillshare</option>
+              <option value="Khan Academy">Khan Academy</option>
+              <option value="freeCodeCamp">freeCodeCamp</option>
+              <option value="LinkedIn Learning">LinkedIn Learning</option>
+              <option value="Other">Other (Custom)</option>
+            </select>
+          </div>
+          <div>
+            <label for="field-category" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Category / Topic</label>
+            <input id="field-category" type="text" placeholder="e.g. AI, Physics, Finance" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+
+        <!-- Custom Platform Input -->
+        <div id="custom-platform-wrap" class="hidden">
+          <label for="field-custom-platform" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Custom Platform Name *</label>
+          <input id="field-custom-platform" type="text" placeholder="e.g. Scaler, PW Skills, MIT OCW" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label for="field-login-hint" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Login Hint (No raw passwords)</label>
+          <input id="field-login-hint" type="text" placeholder="e.g. Google Login (work email) or Bitwarden" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+          <div>
+            <label for="field-status" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status</label>
+            <select id="field-status" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="Not Started">Not Started</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Paused">Paused</option>
+            </select>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label for="field-progress">Progress</label>
+              <span id="progress-label" class="text-indigo-600 dark:text-indigo-400">0%</span>
+            </div>
+            <input id="field-progress" type="range" min="0" max="100" step="5" value="0" class="w-full accent-indigo-600 cursor-pointer" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="field-deadline" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Date / Expiry</label>
+            <input id="field-deadline" type="date" class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label for="field-cert-url" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Certificate URL (Optional)</label>
+            <input id="field-cert-url" type="url" placeholder="https://coursera.org/verify/..." class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+
+        <div>
+          <label for="field-notes" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Notes / Next Lesson</label>
+          <textarea id="field-notes" rows="2" placeholder="e.g. Finished Module 2; start Quiz 3 next..." class="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input id="field-pinned" type="checkbox" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+          <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Pin to top as active focus course</span>
+        </label>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button id="btn-cancel-modal" type="button" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">Save Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Mode Modal -->
+  <div id="import-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="modal-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-md p-5 space-y-4">
+      <div class="flex items-start justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Import Courses Backup</h3>
+          <p id="import-summary" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Found 0 courses in file.</p>
+        </div>
+        <button id="btn-close-import" type="button" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300">How would you like to import these courses?</p>
+      <div class="flex flex-col sm:flex-row gap-2 pt-1">
+        <button id="btn-import-merge" type="button" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">Merge (Keep Existing)</button>
+        <button id="btn-import-replace" type="button" class="flex-1 px-4 py-2.5 text-sm font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-900/60 transition">Replace All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="modal-card bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-sm p-5 space-y-4">
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">Remove Course?</h3>
+      <p id="delete-course-name" class="text-sm text-slate-600 dark:text-slate-300">Are you sure you want to remove this course?</p>
+      <div class="flex justify-end gap-2">
+        <button id="btn-cancel-delete" type="button" class="px-3.5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
+        <button id="btn-confirm-delete" type="button" class="px-3.5 py-2 text-sm font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg transition-opacity duration-200"></div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'coursevault_courses_v1';
+      const INIT_FLAG_KEY = 'coursevault_initialized_v1';
+      const THEME_KEY = 'coursevault_theme_v2';
+      const LAST_BACKUP_KEY = 'coursevault_last_backup_v2';
+      const SYNC_CONFIG_KEY = 'coursevault_sync_config_v3';
+
+      const APPS_SCRIPT_SNIPPET = `const SECRET_TOKEN = 'change-this-to-your-secret-passphrase';
+const SHEET_NAME = 'CourseVault';
+
+function getOrCreateSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(['id','title','platform','category','url','loginHint','status','progress','deadline','certificateUrl','pinned','notes','updatedAt','deleted']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function jsonOut_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  if (!e || !e.parameter || e.parameter.token !== SECRET_TOKEN) {
+    return jsonOut_({ ok: false, error: 'Unauthorized: invalid token' });
+  }
+  const sheet = getOrCreateSheet_();
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length <= 1) return jsonOut_({ ok: true, courses: [] });
+  const headers = rows[0];
+  const courses = rows.slice(1).filter(r => r[0]).map(r => {
+    const item = {};
+    headers.forEach((h, i) => { item[h] = r[i]; });
+    item.progress = Number(item.progress) || 0;
+    item.pinned = item.pinned === true || item.pinned === 'true' || item.pinned === 'TRUE';
+    item.deleted = item.deleted === true || item.deleted === 'true' || item.deleted === 'TRUE';
+    item.updatedAt = Number(item.updatedAt) || 0;
+    return item;
+  });
+  return jsonOut_({ ok: true, courses: courses });
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents || '{}');
+    if (body.token !== SECRET_TOKEN) {
+      return jsonOut_({ ok: false, error: 'Unauthorized: invalid token' });
+    }
+    const incoming = Array.isArray(body.courses) ? body.courses : [];
+    const sheet = getOrCreateSheet_();
+    const headers = ['id','title','platform','category','url','loginHint','status','progress','deadline','certificateUrl','pinned','notes','updatedAt','deleted'];
+    const existingRows = sheet.getDataRange().getValues();
+    const map = {};
+    if (existingRows.length > 1) {
+      const h = existingRows[0];
+      existingRows.slice(1).filter(r => r[0]).forEach(r => {
+        const obj = {};
+        h.forEach((k, i) => { obj[k] = r[i]; });
+        obj.updatedAt = Number(obj.updatedAt) || 0;
+        map[String(obj.id)] = obj;
+      });
+    }
+    incoming.forEach(c => {
+      if (!c || !c.id) return;
+      const key = String(c.id);
+      const prev = map[key];
+      if (!prev || (Number(c.updatedAt) || 0) >= (Number(prev.updatedAt) || 0)) {
+        map[key] = c;
+      }
+    });
+    const merged = Object.keys(map).map(k => map[k]);
+    sheet.clearContents();
+    const outRows = [headers].concat(merged.map(c => headers.map(h => c[h] !== undefined ? c[h] : '')));
+    sheet.getRange(1, 1, outRows.length, headers.length).setValues(outRows);
+    return jsonOut_({ ok: true, courses: merged, syncedAt: Date.now() });
+  } catch (err) {
+    return jsonOut_({ ok: false, error: String(err) });
+  }
+}`;
+
+      const KNOWN_PLATFORMS = [
+        'Udemy', 'Coursera', 'YouTube', 'NPTEL', 'edX',
+        'Skillshare', 'Khan Academy', 'freeCodeCamp', 'LinkedIn Learning'
+      ];
+
+      const DOMAIN_PLATFORM_MAP = [
+        { match: 'udemy.com', platform: 'Udemy' },
+        { match: 'coursera.org', platform: 'Coursera' },
+        { match: 'youtube.com', platform: 'YouTube' },
+        { match: 'youtu.be', platform: 'YouTube' },
+        { match: 'nptel.ac.in', platform: 'NPTEL' },
+        { match: 'swayam.gov.in', platform: 'NPTEL' },
+        { match: 'edx.org', platform: 'edX' },
+        { match: 'skillshare.com', platform: 'Skillshare' },
+        { match: 'khanacademy.org', platform: 'Khan Academy' },
+        { match: 'freecodecamp.org', platform: 'freeCodeCamp' },
+        { match: 'linkedin.com/learning', platform: 'LinkedIn Learning' }
+      ];
+
+      function futureDateIso(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return d.toISOString().slice(0, 10);
+      }
+
+      const SAMPLE_COURSES = [
+        {
+          id: 'sample-1',
+          title: 'Machine Learning Specialization (Andrew Ng)',
+          platform: 'Coursera',
+          category: 'AI & ML',
+          url: 'https://www.coursera.org/specializations/machine-learning-introduction',
+          loginHint: 'Google Login (Personal Gmail)',
+          status: 'In Progress',
+          progress: 45,
+          deadline: futureDateIso(12),
+          certificateUrl: '',
+          pinned: true,
+          notes: 'Completed Supervised ML, currently on Week 2 of Neural Networks.',
+          updatedAt: Date.now() - 86400000 * 2,
+          deleted: false
+        },
+        {
+          id: 'sample-2',
+          title: 'Essence of Linear Algebra',
+          platform: 'YouTube',
+          category: 'Math & Physics',
+          url: 'https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab',
+          loginHint: 'No Login Required (YouTube)',
+          status: 'Completed',
+          progress: 100,
+          deadline: '',
+          certificateUrl: '',
+          pinned: false,
+          notes: 'Great visual intuition for eigenvalues & transformations.',
+          updatedAt: Date.now() - 86400000 * 5,
+          deleted: false
+        },
+        {
+          id: 'sample-3',
+          title: 'Complete Web & React Developer Bootcamp',
+          platform: 'Udemy',
+          category: 'Web Dev',
+          url: 'https://www.udemy.com/',
+          loginHint: 'Email + Bitwarden',
+          status: 'Not Started',
+          progress: 0,
+          deadline: futureDateIso(30),
+          certificateUrl: '',
+          pinned: false,
+          notes: 'Enrolled during sale — start after finishing ML Week 3.',
+          updatedAt: Date.now() - 86400000 * 1,
+          deleted: false
+        }
+      ];
+
+      let courses = [];
+      let pendingImportCourses = [];
+      let pendingDeleteId = null;
+      let bannerDismissed = false;
+      let syncInFlight = false;
+      let syncConfig = { url: '', token: '', autoSync: true };
+
+      const state = {
+        search: '',
+        status: 'ALL',
+        platform: 'ALL',
+        sort: 'newest'
+      };
+
+      function safeGetItem(key) {
+        try { return window.localStorage.getItem(key); } catch (e) { return null; }
+      }
+      function safeSetItem(key, val) {
+        try { window.localStorage.setItem(key, val); } catch (e) {}
+      }
+
+      function loadSyncConfig() {
+        const raw = safeGetItem(SYNC_CONFIG_KEY);
+        if (!raw) return;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            syncConfig = {
+              url: String(parsed.url || ''),
+              token: String(parsed.token || ''),
+              autoSync: parsed.autoSync !== false
+            };
+          }
+        } catch (e) {}
+      }
+
+      function saveSyncConfig() {
+        safeSetItem(SYNC_CONFIG_KEY, JSON.stringify(syncConfig));
+      }
+
+      function isSyncConfigured() {
+        return Boolean(syncConfig.url && /^https:\/\//i.test(syncConfig.url) && syncConfig.token);
+      }
+
+      function setSyncStatusUI(mode, label) {
+        const dot = document.getElementById('sync-dot');
+        const text = document.getElementById('sync-status-label');
+        const dotMap = {
+          idle: 'w-2 h-2 rounded-full bg-slate-400',
+          syncing: 'w-2 h-2 rounded-full bg-amber-500 animate-pulse',
+          synced: 'w-2 h-2 rounded-full bg-emerald-500',
+          error: 'w-2 h-2 rounded-full bg-rose-500'
+        };
+        dot.className = dotMap[mode] || dotMap.idle;
+        text.textContent = label;
+      }
+
+      function showSyncFeedback(type, msg) {
+        const el = document.getElementById('sync-feedback');
+        el.textContent = msg;
+        el.className = 'px-3 py-2 rounded-lg text-xs font-medium ' + (
+          type === 'error'
+            ? 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+            : 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+        );
+      }
+
+      function normalizeCourse(item) {
+        return {
+          id: String(item.id || ('course-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6))),
+          title: String(item.title || ''),
+          platform: String(item.platform || 'Other'),
+          category: String(item.category || ''),
+          url: sanitizeUrl(item.url || ''),
+          loginHint: String(item.loginHint || ''),
+          status: ['Not Started', 'In Progress', 'Completed', 'Paused'].includes(item.status) ? item.status : 'Not Started',
+          progress: Math.max(0, Math.min(100, Number(item.progress) || 0)),
+          deadline: String(item.deadline || ''),
+          certificateUrl: sanitizeUrl(item.certificateUrl || ''),
+          pinned: item.pinned === true || item.pinned === 'true' || item.pinned === 'TRUE',
+          notes: String(item.notes || ''),
+          updatedAt: Number(item.updatedAt) || Date.now(),
+          deleted: item.deleted === true || item.deleted === 'true' || item.deleted === 'TRUE'
+        };
+      }
+
+      function mergeCoursesByTimestamp(localList, remoteList) {
+        const map = new Map();
+        localList.forEach(c => map.set(c.id, normalizeCourse(c)));
+        remoteList.forEach(r => {
+          const norm = normalizeCourse(r);
+          const existing = map.get(norm.id);
+          if (!existing || norm.updatedAt >= existing.updatedAt) {
+            map.set(norm.id, norm);
+          }
+        });
+        return Array.from(map.values());
+      }
+
+      async function syncWithCloud(mode) {
+        if (!isSyncConfigured() || syncInFlight) return;
+        syncInFlight = true;
+        setSyncStatusUI('syncing', 'Syncing...');
+
+        try {
+          if (mode === 'pull') {
+            const sep = syncConfig.url.includes('?') ? '&' : '?';
+            const res = await fetch(`${syncConfig.url}${sep}token=${encodeURIComponent(syncConfig.token)}`);
+            const data = await res.json();
+            if (!data || !data.ok) {
+              throw new Error((data && data.error) || 'Sync failed');
+            }
+            const remoteList = Array.isArray(data.courses) ? data.courses : [];
+            courses = mergeCoursesByTimestamp(courses, remoteList);
+            saveCoursesLocalOnly();
+            renderCourses();
+            await pushCoursesToCloud_();
+          } else {
+            await pushCoursesToCloud_();
+          }
+
+          setSyncStatusUI('synced', 'Synced');
+          markBackedUp();
+          if (mode === 'manual') {
+            showSyncFeedback('ok', 'Synced successfully with Google Sheets.');
+            showToast('Cloud sync complete');
+          }
+        } catch (err) {
+          setSyncStatusUI('error', 'Sync Error');
+          if (mode === 'manual') {
+            showSyncFeedback('error', 'Sync error: ' + (err && err.message ? err.message : 'Check URL, token, or network.'));
+          } else {
+            showToast('Cloud sync failed — saved locally');
+          }
+        } finally {
+          syncInFlight = false;
+        }
+      }
+
+      async function pushCoursesToCloud_() {
+        const res = await fetch(syncConfig.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            token: syncConfig.token,
+            courses: courses
+          })
+        });
+        const data = await res.json();
+        if (!data || !data.ok) {
+          throw new Error((data && data.error) || 'Push failed');
+        }
+        if (Array.isArray(data.courses)) {
+          courses = mergeCoursesByTimestamp(courses, data.courses);
+          saveCoursesLocalOnly();
+          renderCourses();
+        }
+      }
+
+      function applyTheme(theme) {
+        const isDark = theme === 'dark';
+        document.documentElement.classList.toggle('dark', isDark);
+        document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+        document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+        safeSetItem(THEME_KEY, isDark ? 'dark' : 'light');
+
+        const metaTheme = document.getElementById('meta-theme-color');
+        if (metaTheme) {
+          metaTheme.setAttribute('content', isDark ? '#020617' : '#4338ca');
+        }
+      }
+
+      function initTheme() {
+        const saved = safeGetItem(THEME_KEY);
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved ? (saved === 'dark' ? 'dark' : 'light') : (prefersDark ? 'dark' : 'light'));
+      }
+
+      function activeCourses() {
+        return courses.filter(c => !c.deleted);
+      }
+
+      function loadCourses() {
+        const initialized = safeGetItem(INIT_FLAG_KEY);
+        const raw = safeGetItem(STORAGE_KEY);
+        if (!initialized && !raw) {
+          courses = SAMPLE_COURSES.slice();
+          saveCoursesLocalOnly();
+          safeSetItem(INIT_FLAG_KEY, 'true');
+          return;
+        }
+        try {
+          const parsed = raw ? JSON.parse(raw) : [];
+          courses = Array.isArray(parsed) ? parsed.map(normalizeCourse) : [];
+        } catch (e) {
+          courses = [];
+        }
+      }
+
+      function saveCoursesLocalOnly() {
+        safeSetItem(STORAGE_KEY, JSON.stringify(courses));
+        safeSetItem(INIT_FLAG_KEY, 'true');
+      }
+
+      function saveCourses() {
+        saveCoursesLocalOnly();
+        if (isSyncConfigured() && syncConfig.autoSync) {
+          syncWithCloud('push');
+        }
+      }
+
+      function updateBackupBanner() {
+        const banner = document.getElementById('backup-banner');
+        const textEl = document.getElementById('backup-banner-text');
+        const lastRaw = safeGetItem(LAST_BACKUP_KEY);
+
+        if (bannerDismissed || activeCourses().length === 0 || isSyncConfigured()) {
+          banner.classList.add('hidden');
+          return;
+        }
+
+        if (!lastRaw) {
+          textEl.textContent = 'Your courses are stored locally. Export a JSON backup or enable Cloud Sync so you never lose them.';
+          banner.classList.remove('hidden');
+          return;
+        }
+
+        const daysAgo = Math.floor((Date.now() - Number(lastRaw)) / 86400000);
+        if (daysAgo >= 7) {
+          textEl.textContent = `Last backup was ${daysAgo} days ago. Export a fresh JSON backup or connect Cloud Sync.`;
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+
+      function markBackedUp() {
+        safeSetItem(LAST_BACKUP_KEY, String(Date.now()));
+        updateBackupBanner();
+      }
+
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.classList.add('hidden');
+        }, 2600);
+      }
+
+      function copyText(text, label) {
+        if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(label + ' copied!');
+          }).catch(() => fallbackCopy(text, label));
+        } else {
+          fallbackCopy(text, label);
+        }
+      }
+
+      function fallbackCopy(text, label) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast(label + ' copied!');
+        } catch (e) {
+          showToast('Could not copy to clipboard');
+        }
+        document.body.removeChild(ta);
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function sanitizeUrl(raw) {
+        const trimmed = String(raw || '').trim();
+        if (!trimmed) return '';
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        if (/^[a-z]+:/i.test(trimmed)) return '';
+        return 'https://' + trimmed;
+      }
+
+      function getPlatformBadgeClass(platform) {
+        const map = {
+          Udemy: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+          Coursera: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+          YouTube: 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+          NPTEL: 'bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+          edX: 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+          Skillshare: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+          'Khan Academy': 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+          freeCodeCamp: 'bg-slate-800 text-white border-slate-700',
+          'LinkedIn Learning': 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800'
+        };
+        return map[platform] || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+      }
+
+      function getStatusBadgeClass(status) {
+        const map = {
+          'In Progress': 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+          Completed: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+          'Not Started': 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+          Paused: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+        };
+        return map[status] || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+      }
+
+      function formatDeadlineBadge(deadline, status) {
+        if (!deadline || status === 'Completed') return '';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const target = new Date(deadline + 'T00:00:00');
+        if (isNaN(target.getTime())) return '';
+        const diffDays = Math.round((target - today) / 86400000);
+
+        if (diffDays < 0) {
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">Overdue ${Math.abs(diffDays)}d</span>`;
+        }
+        if (diffDays === 0) {
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">Due Today</span>`;
+        }
+        if (diffDays <= 7) {
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">Due in ${diffDays}d</span>`;
+        }
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Target: ${escapeHtml(deadline)}</span>`;
+      }
+
+      function renderStats() {
+        const list = activeCourses();
+        document.getElementById('stat-total').textContent = list.length;
+        document.getElementById('stat-in-progress').textContent = list.filter(c => c.status === 'In Progress').length;
+        document.getElementById('stat-completed').textContent = list.filter(c => c.status === 'Completed').length;
+        document.getElementById('stat-not-started').textContent = list.filter(c => c.status === 'Not Started').length;
+        document.getElementById('stat-pinned').textContent = list.filter(c => c.pinned).length;
+      }
+
+      function renderPlatformDropdown() {
+        const select = document.getElementById('filter-platform');
+        const current = state.platform;
+        const platforms = Array.from(new Set(activeCourses().map(c => c.platform).filter(Boolean))).sort();
+        select.innerHTML = '<option value="ALL">All Platforms</option>' +
+          platforms.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+        if (platforms.includes(current) || current === 'ALL') {
+          select.value = current;
+        } else {
+          state.platform = 'ALL';
+          select.value = 'ALL';
+        }
+      }
+
+      function getFilteredCourses() {
+        const q = state.search.trim().toLowerCase();
+        let list = activeCourses().filter(c => {
+          if (state.status === 'PINNED' && !c.pinned) return false;
+          if (state.status !== 'ALL' && state.status !== 'PINNED' && c.status !== state.status) return false;
+          if (state.platform !== 'ALL' && c.platform !== state.platform) return false;
+          if (q) {
+            const haystack = [c.title, c.platform, c.category, c.loginHint, c.notes, c.deadline]
+              .join(' ')
+              .toLowerCase();
+            if (!haystack.includes(q)) return false;
+          }
+          return true;
+        });
+
+        list.sort((a, b) => {
+          if (state.sort !== 'deadline-asc') {
+            if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
+          }
+          if (state.sort === 'deadline-asc') {
+            const da = a.deadline ? new Date(a.deadline + 'T00:00:00').getTime() : Infinity;
+            const db = b.deadline ? new Date(b.deadline + 'T00:00:00').getTime() : Infinity;
+            return da - db;
+          }
+          if (state.sort === 'progress-desc') {
+            return (Number(b.progress) || 0) - (Number(a.progress) || 0);
+          }
+          if (state.sort === 'title-asc') {
+            return (a.title || '').localeCompare(b.title || '');
+          }
+          return (b.updatedAt || 0) - (a.updatedAt || 0);
+        });
+
+        return list;
+      }
+
+      function renderCourses() {
+        renderStats();
+        renderPlatformDropdown();
+        updateBackupBanner();
+
+        const filtered = getFilteredCourses();
+        const grid = document.getElementById('course-grid');
+        const emptyState = document.getElementById('empty-state');
+        const countEl = document.getElementById('results-count');
+
+        countEl.textContent = filtered.length === 1 ? '1 course' : `${filtered.length} courses`;
+
+        if (filtered.length === 0) {
+          grid.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        grid.innerHTML = filtered.map(c => {
+          const progress = Math.max(0, Math.min(100, Number(c.progress) || 0));
+          const safeUrl = sanitizeUrl(c.url) || '#';
+          const safeCertUrl = sanitizeUrl(c.certificateUrl);
+          const deadlineHtml = formatDeadlineBadge(c.deadline, c.status);
+          const pinnedRing = c.pinned
+            ? 'ring-2 ring-indigo-500/40 dark:ring-indigo-400/40 border-indigo-300 dark:border-indigo-700'
+            : 'border-slate-200 dark:border-slate-800';
+
+          return `
+            <article data-id="${escapeHtml(c.id)}" class="bg-white dark:bg-slate-900 border ${pinnedRing} rounded-2xl p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-3.5">
+              <div class="space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 text-[11px] font-semibold rounded-md border ${getPlatformBadgeClass(c.platform)}">${escapeHtml(c.platform || 'Other')}</span>
+                    ${c.category ? `<span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${escapeHtml(c.category)}</span>` : ''}
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button data-action="toggle-pin" data-id="${escapeHtml(c.id)}" type="button" title="${c.pinned ? 'Unpin course' : 'Pin as active focus'}" class="p-1 rounded-lg transition ${c.pinned ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/70' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800'}">
+                      <svg class="w-4 h-4" fill="${c.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                    </button>
+                    <select data-action="quick-status" data-id="${escapeHtml(c.id)}" aria-label="Change course status" class="text-[11px] font-semibold px-2 py-1 rounded-lg border cursor-pointer focus:outline-none ${getStatusBadgeClass(c.status)}">
+                      <option value="Not Started" ${c.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                      <option value="In Progress" ${c.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                      <option value="Completed" ${c.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                      <option value="Paused" ${c.status === 'Paused' ? 'selected' : ''}>Paused</option>
+                    </select>
+                  </div>
+                </div>
+
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">${escapeHtml(c.title)}</h3>
+
+                ${(deadlineHtml || safeCertUrl) ? `
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    ${deadlineHtml}
+                    ${safeCertUrl ? `<a href="${escapeHtml(safeCertUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:underline">Certificate ↗</a>` : ''}
+                  </div>
+                ` : ''}
+
+                <!-- Login Hint Box -->
+                <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-lg px-2.5 py-1.5">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    <span class="text-xs text-slate-700 dark:text-slate-300 truncate" title="${escapeHtml(c.loginHint || 'No login hint')}">${escapeHtml(c.loginHint || 'No login hint added')}</span>
+                  </div>
+                  ${c.loginHint ? `<button data-action="copy-hint" data-id="${escapeHtml(c.id)}" type="button" title="Copy login hint" class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline shrink-0">Copy</button>` : ''}
+                </div>
+
+                <!-- Progress Bar -->
+                <div>
+                  <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                    <span>Progress</span>
+                    <span class="font-semibold text-slate-700 dark:text-slate-200">${progress}%</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-300 ${progress === 100 ? 'bg-emerald-500' : 'bg-indigo-600 dark:bg-indigo-500'}" style="width: ${progress}%"></div>
+                  </div>
+                </div>
+
+                ${c.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(c.notes)}</p>` : ''}
+              </div>
+
+              <!-- Card Footer Actions -->
+              <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 rounded-lg transition">
+                  <span>Open Course</span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+
+                <div class="flex items-center gap-1">
+                  <button data-action="copy-url" data-id="${escapeHtml(c.id)}" type="button" title="Copy course URL" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  <button data-action="edit" data-id="${escapeHtml(c.id)}" type="button" title="Edit course" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button data-action="delete" data-id="${escapeHtml(c.id)}" type="button" title="Delete course" class="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function syncCustomPlatformVisibility() {
+        const isOther = document.getElementById('field-platform').value === 'Other';
+        const wrap = document.getElementById('custom-platform-wrap');
+        const input = document.getElementById('field-custom-platform');
+        wrap.classList.toggle('hidden', !isOther);
+        input.required = isOther;
+      }
+
+      function autoDetectPlatformFromUrl(urlStr) {
+        const badge = document.getElementById('url-detect-badge');
+        const lower = (urlStr || '').toLowerCase();
+        if (!lower || !lower.includes('.')) {
+          badge.classList.add('hidden');
+          return;
+        }
+
+        const matched = DOMAIN_PLATFORM_MAP.find(item => lower.includes(item.match));
+        if (matched) {
+          document.getElementById('field-platform').value = matched.platform;
+          syncCustomPlatformVisibility();
+          badge.textContent = `Detected: ${matched.platform}`;
+          badge.classList.remove('hidden');
+          return;
+        }
+
+        try {
+          const parsed = new URL(/^https?:\/\//i.test(urlStr) ? urlStr : 'https://' + urlStr);
+          const host = parsed.hostname.replace(/^www\./i, '');
+          const base = host.split('.')[0];
+          if (base && base.length >= 2) {
+            const niceName = base.charAt(0).toUpperCase() + base.slice(1);
+            document.getElementById('field-platform').value = 'Other';
+            syncCustomPlatformVisibility();
+            document.getElementById('field-custom-platform').value = niceName;
+            badge.textContent = `Detected: ${niceName}`;
+            badge.classList.remove('hidden');
+            return;
+          }
+        } catch (e) {}
+        badge.classList.add('hidden');
+      }
+
+      function openSyncModal() {
+        document.getElementById('sync-url-input').value = syncConfig.url || '';
+        document.getElementById('sync-token-input').value = syncConfig.token || '';
+        document.getElementById('sync-auto-checkbox').checked = syncConfig.autoSync !== false;
+        document.getElementById('sync-feedback').classList.add('hidden');
+        document.getElementById('sync-modal').classList.remove('hidden');
+        document.getElementById('sync-url-input').focus();
+      }
+
+      function openCourseModal(course) {
+        const modal = document.getElementById('course-modal');
+        document.getElementById('field-id').value = course ? course.id : '';
+        document.getElementById('field-url').value = course ? (course.url || '') : '';
+        document.getElementById('field-title').value = course ? course.title : '';
+        document.getElementById('field-category').value = course ? (course.category || '') : '';
+        document.getElementById('field-login-hint').value = course ? (course.loginHint || '') : '';
+        document.getElementById('field-status').value = course ? (course.status || 'Not Started') : 'Not Started';
+        document.getElementById('field-deadline').value = course ? (course.deadline || '') : '';
+        document.getElementById('field-cert-url').value = course ? (course.certificateUrl || '') : '';
+        document.getElementById('field-notes').value = course ? (course.notes || '') : '';
+        document.getElementById('field-pinned').checked = course ? Boolean(course.pinned) : false;
+        document.getElementById('url-detect-badge').classList.add('hidden');
+
+        if (course && course.platform) {
+          if (KNOWN_PLATFORMS.includes(course.platform)) {
+            document.getElementById('field-platform').value = course.platform;
+            document.getElementById('field-custom-platform').value = '';
+          } else {
+            document.getElementById('field-platform').value = 'Other';
+            document.getElementById('field-custom-platform').value = course.platform;
+          }
+        } else {
+          document.getElementById('field-platform').value = 'Udemy';
+          document.getElementById('field-custom-platform').value = '';
+        }
+        syncCustomPlatformVisibility();
+
+        const prog = course ? (Number(course.progress) || 0) : 0;
+        document.getElementById('field-progress').value = prog;
+        document.getElementById('progress-label').textContent = prog + '%';
+
+        document.getElementById('modal-title').textContent = course ? 'Edit Course' : 'Add New Course';
+        modal.classList.remove('hidden');
+        document.getElementById(course ? 'field-title' : 'field-url').focus();
+      }
+
+      function closeAllModals() {
+        document.getElementById('course-modal').classList.add('hidden');
+        document.getElementById('import-modal').classList.add('hidden');
+        document.getElementById('delete-modal').classList.add('hidden');
+        document.getElementById('sync-modal').classList.add('hidden');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenu) mobileMenu.classList.add('hidden');
+        pendingDeleteId = null;
+        pendingImportCourses = [];
+      }
+
+      // Cloud Sync Modal Events
+      document.getElementById('btn-cloud-sync').addEventListener('click', openSyncModal);
+      document.getElementById('btn-close-sync').addEventListener('click', closeAllModals);
+
+      document.getElementById('sync-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const url = document.getElementById('sync-url-input').value.trim();
+        const token = document.getElementById('sync-token-input').value.trim();
+        const autoSync = document.getElementById('sync-auto-checkbox').checked;
+
+        if (!/^https:\/\/script\.google\.com\//i.test(url) && !/^https:\/\//i.test(url)) {
+          showSyncFeedback('error', 'Please enter a valid https:// Google Apps Script Web App URL.');
+          return;
+        }
+        if (!token) {
+          showSyncFeedback('error', 'Please enter your Secret Sync Token.');
+          return;
+        }
+
+        syncConfig = { url, token, autoSync };
+        saveSyncConfig();
+        updateBackupBanner();
+        syncWithCloud('manual');
+      });
+
+      document.getElementById('btn-sync-now').addEventListener('click', () => {
+        const url = document.getElementById('sync-url-input').value.trim();
+        const token = document.getElementById('sync-token-input').value.trim();
+        if (url && token) {
+          syncConfig = { url, token, autoSync: document.getElementById('sync-auto-checkbox').checked };
+          saveSyncConfig();
+        }
+        if (!isSyncConfigured()) {
+          showSyncFeedback('error', 'Enter your Web App URL and Secret Token first.');
+          return;
+        }
+        syncWithCloud('manual');
+      });
+
+      document.getElementById('btn-sync-disconnect').addEventListener('click', () => {
+        syncConfig = { url: '', token: '', autoSync: true };
+        saveSyncConfig();
+        document.getElementById('sync-url-input').value = '';
+        document.getElementById('sync-token-input').value = '';
+        setSyncStatusUI('idle', 'Cloud Sync');
+        updateBackupBanner();
+        showSyncFeedback('ok', 'Disconnected. Your courses remain safely stored locally.');
+        showToast('Cloud sync disconnected');
+      });
+
+      document.getElementById('btn-copy-apps-script').addEventListener('click', () => {
+        copyText(APPS_SCRIPT_SNIPPET, 'Apps Script code');
+      });
+
+      // Mobile Menu dropdown toggle
+      const mobileMoreBtn = document.getElementById('btn-mobile-more');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (mobileMoreBtn && mobileMenu) {
+        mobileMoreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          mobileMenu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+          if (!mobileMenu.contains(e.target) && e.target !== mobileMoreBtn) {
+            mobileMenu.classList.add('hidden');
+          }
+        });
+      }
+
+      // Theme toggle
+      document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        applyTheme(isDark ? 'light' : 'dark');
+      });
+
+      document.getElementById('btn-add-course').addEventListener('click', () => openCourseModal(null));
+      document.getElementById('btn-empty-add').addEventListener('click', () => openCourseModal(null));
+      document.getElementById('btn-close-modal').addEventListener('click', closeAllModals);
+      document.getElementById('btn-cancel-modal').addEventListener('click', closeAllModals);
+
+      ['course-modal', 'import-modal', 'delete-modal', 'sync-modal'].forEach(modalId => {
+        const overlay = document.getElementById(modalId);
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) closeAllModals();
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeAllModals();
+          return;
+        }
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+        const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select';
+        if (isTyping) return;
+
+        if (e.key === '/') {
+          e.preventDefault();
+          document.getElementById('search-input').focus();
+        } else if (e.key === 'n' || e.key === 'N') {
+          e.preventDefault();
+          openCourseModal(null);
+        }
+      });
+
+      document.getElementById('field-platform').addEventListener('change', syncCustomPlatformVisibility);
+
+      document.getElementById('field-url').addEventListener('input', (e) => {
+        autoDetectPlatformFromUrl(e.target.value);
+      });
+
+      document.getElementById('field-progress').addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        document.getElementById('progress-label').textContent = val + '%';
+        if (val === 100) {
+          document.getElementById('field-status').value = 'Completed';
+        } else if (val > 0 && document.getElementById('field-status').value === 'Not Started') {
+          document.getElementById('field-status').value = 'In Progress';
+        }
+      });
+
+      document.getElementById('field-status').addEventListener('change', (e) => {
+        if (e.target.value === 'Completed') {
+          document.getElementById('field-progress').value = 100;
+          document.getElementById('progress-label').textContent = '100%';
+        } else if (e.target.value === 'Not Started') {
+          document.getElementById('field-progress').value = 0;
+          document.getElementById('progress-label').textContent = '0%';
+        }
+      });
+
+      document.getElementById('course-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('field-id').value;
+        const selectedPlatform = document.getElementById('field-platform').value;
+        const finalPlatform = selectedPlatform === 'Other'
+          ? (document.getElementById('field-custom-platform').value.trim() || 'Other')
+          : selectedPlatform;
+
+        const entry = {
+          id: id || ('course-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)),
+          title: document.getElementById('field-title').value.trim(),
+          platform: finalPlatform,
+          category: document.getElementById('field-category').value.trim(),
+          url: sanitizeUrl(document.getElementById('field-url').value.trim()),
+          loginHint: document.getElementById('field-login-hint').value.trim(),
+          status: document.getElementById('field-status').value,
+          progress: Number(document.getElementById('field-progress').value) || 0,
+          deadline: document.getElementById('field-deadline').value,
+          certificateUrl: sanitizeUrl(document.getElementById('field-cert-url').value.trim()),
+          pinned: document.getElementById('field-pinned').checked,
+          notes: document.getElementById('field-notes').value.trim(),
+          updatedAt: Date.now(),
+          deleted: false
+        };
+
+        if (!entry.url) {
+          showToast('Please enter a valid course URL');
+          return;
+        }
+
+        if (id) {
+          const idx = courses.findIndex(c => c.id === id);
+          if (idx !== -1) courses[idx] = entry;
+          showToast('Course updated');
+        } else {
+          courses.unshift(entry);
+          showToast('Course added');
+        }
+
+        saveCourses();
+        closeAllModals();
+        renderCourses();
+      });
+
+      const searchInput = document.getElementById('search-input');
+      const clearSearchBtn = document.getElementById('btn-clear-search');
+
+      searchInput.addEventListener('input', (e) => {
+        state.search = e.target.value;
+        clearSearchBtn.classList.toggle('hidden', !state.search);
+        renderCourses();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        state.search = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        renderCourses();
+      });
+
+      document.getElementById('filter-platform').addEventListener('change', (e) => {
+        state.platform = e.target.value;
+        renderCourses();
+      });
+
+      document.getElementById('sort-select').addEventListener('change', (e) => {
+        state.sort = e.target.value;
+        renderCourses();
+      });
+
+      function updateStatusPillsUI() {
+        document.querySelectorAll('.status-pill').forEach(p => {
+          const active = p.getAttribute('data-status') === state.status;
+          p.className = 'status-pill px-3 py-1.5 rounded-full text-xs font-medium transition ' +
+            (active
+              ? 'bg-indigo-600 text-white'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700');
+        });
+      }
+
+      document.getElementById('status-pills').addEventListener('click', (e) => {
+        const btn = e.target.closest('.status-pill');
+        if (!btn) return;
+        state.status = btn.getAttribute('data-status');
+        updateStatusPillsUI();
+        renderCourses();
+      });
+
+      document.getElementById('btn-reset-filters').addEventListener('click', () => {
+        state.search = '';
+        state.status = 'ALL';
+        state.platform = 'ALL';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        document.getElementById('filter-platform').value = 'ALL';
+        updateStatusPillsUI();
+        renderCourses();
+      });
+
+      const grid = document.getElementById('course-grid');
+      grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+        const course = courses.find(c => c.id === id);
+        if (!course) return;
+
+        if (action === 'toggle-pin') {
+          course.pinned = !course.pinned;
+          course.updatedAt = Date.now();
+          saveCourses();
+          renderCourses();
+          showToast(course.pinned ? 'Pinned to top' : 'Unpinned');
+        } else if (action === 'edit') {
+          openCourseModal(course);
+        } else if (action === 'copy-hint') {
+          copyText(course.loginHint, 'Login hint');
+        } else if (action === 'copy-url') {
+          copyText(course.url, 'Course link');
+        } else if (action === 'delete') {
+          pendingDeleteId = id;
+          document.getElementById('delete-course-name').textContent = `Remove "${course.title}" from your tracker?`;
+          document.getElementById('delete-modal').classList.remove('hidden');
+        }
+      });
+
+      grid.addEventListener('change', (e) => {
+        const select = e.target.closest('select[data-action="quick-status"]');
+        if (!select) return;
+        const id = select.getAttribute('data-id');
+        const course = courses.find(c => c.id === id);
+        if (!course) return;
+        course.status = select.value;
+        if (course.status === 'Completed') course.progress = 100;
+        if (course.status === 'Not Started' && course.progress === 100) course.progress = 0;
+        course.updatedAt = Date.now();
+        saveCourses();
+        renderCourses();
+        showToast('Status updated');
+      });
+
+      document.getElementById('btn-cancel-delete').addEventListener('click', closeAllModals);
+
+      document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+        if (pendingDeleteId) {
+          const target = courses.find(c => c.id === pendingDeleteId);
+          if (target) {
+            if (isSyncConfigured()) {
+              target.deleted = true;
+              target.updatedAt = Date.now();
+            } else {
+              courses = courses.filter(c => c.id !== pendingDeleteId);
+            }
+            saveCourses();
+            renderCourses();
+            showToast('Course removed');
+          }
+        }
+        closeAllModals();
+      });
+
+      // JSON Export helper
+      function exportJsonBackup() {
+        const payload = {
+          app: 'CourseVault',
+          version: 3,
+          exportedAt: new Date().toISOString(),
+          courses: activeCourses()
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `coursevault-backup-${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        markBackedUp();
+        showToast('JSON backup downloaded');
+      }
+
+      // CSV Export helper
+      function csvCell(val) {
+        const str = String(val == null ? '' : val).replace(/"/g, '""');
+        return `"${str}"`;
+      }
+
+      function exportCsv() {
+        const headers = ['Title', 'Platform', 'Category', 'URL', 'Login Hint', 'Status', 'Progress (%)', 'Target Date', 'Pinned', 'Certificate URL', 'Notes'];
+        const rows = activeCourses().map(c => [
+          c.title, c.platform, c.category, c.url, c.loginHint, c.status,
+          c.progress, c.deadline, c.pinned ? 'Yes' : 'No', c.certificateUrl, c.notes
+        ].map(csvCell).join(','));
+        const csv = [headers.map(csvCell).join(','), ...rows].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `coursevault-export-${dateStr}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        markBackedUp();
+        showToast('CSV exported');
+      }
+
+      const importFileInput = document.getElementById('input-import-file');
+      function triggerImport() {
+        importFileInput.value = '';
+        importFileInput.click();
+      }
+
+      // Desktop listeners
+      document.getElementById('btn-export-json').addEventListener('click', exportJsonBackup);
+      document.getElementById('btn-banner-backup').addEventListener('click', exportJsonBackup);
+      document.getElementById('btn-export-csv').addEventListener('click', exportCsv);
+      document.getElementById('btn-import-json').addEventListener('click', triggerImport);
+
+      // Mobile listeners
+      const mExportJson = document.getElementById('btn-mobile-export-json');
+      if (mExportJson) mExportJson.addEventListener('click', () => { closeAllModals(); exportJsonBackup(); });
+      const mExportCsv = document.getElementById('btn-mobile-export-csv');
+      if (mExportCsv) mExportCsv.addEventListener('click', () => { closeAllModals(); exportCsv(); });
+      const mImportJson = document.getElementById('btn-mobile-import-json');
+      if (mImportJson) mImportJson.addEventListener('click', () => { closeAllModals(); triggerImport(); });
+
+      document.getElementById('btn-banner-dismiss').addEventListener('click', () => {
+        bannerDismissed = true;
+        updateBackupBanner();
+      });
+
+      importFileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.courses) ? parsed.courses : null);
+            if (!list) {
+              showToast('Invalid JSON backup format');
+              return;
+            }
+            pendingImportCourses = list
+              .filter(item => item && item.title && sanitizeUrl(item.url))
+              .map(item => normalizeCourse({ ...item, deleted: false }));
+
+            document.getElementById('import-summary').textContent = `Found ${pendingImportCourses.length} valid course(s) in "${file.name}".`;
+            document.getElementById('import-modal').classList.remove('hidden');
+          } catch (err) {
+            showToast('Could not parse JSON file');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btn-close-import').addEventListener('click', closeAllModals);
+
+      document.getElementById('btn-import-merge').addEventListener('click', () => {
+        const existingKeys = new Set(activeCourses().map(c => (c.title + '|' + c.url).toLowerCase()));
+        let added = 0;
+        pendingImportCourses.forEach(c => {
+          const key = (c.title + '|' + c.url).toLowerCase();
+          if (!existingKeys.has(key)) {
+            courses.push({ ...c, updatedAt: Date.now() });
+            existingKeys.add(key);
+            added++;
+          }
+        });
+        saveCourses();
+        renderCourses();
+        closeAllModals();
+        showToast(`Merged ${added} new course(s)`);
+      });
+
+      document.getElementById('btn-import-replace').addEventListener('click', () => {
+        courses = pendingImportCourses.map(c => ({ ...c, updatedAt: Date.now() }));
+        saveCourses();
+        renderCourses();
+        closeAllModals();
+        showToast(`Imported ${courses.length} course(s)`);
+      });
+
+      // Register PWA Service Worker for offline & standalone install
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch((err) => {
+            console.warn('PWA Service Worker registration skipped:', err);
+          });
+        });
+      }
+
+      // Initial startup
+      initTheme();
+      loadSyncConfig();
+      loadCourses();
+      renderCourses();
+
+      if (isSyncConfigured()) {
+        setSyncStatusUI('synced', 'Synced');
+        if (syncConfig.autoSync) {
+          syncWithCloud('pull');
+        }
+      } else {
+        setSyncStatusUI('idle', 'Cloud Sync');
+      }
+    })();
+  </script>
+</body>
+</html>
