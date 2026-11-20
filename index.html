@@ -582,62 +582,13 @@ function doPost(e) {
         { match: 'linkedin.com/learning', platform: 'LinkedIn Learning' }
       ];
 
-      function futureDateIso(days) {
-        const d = new Date();
-        d.setDate(d.getDate() + days);
-        return d.toISOString().slice(0, 10);
-      }
+      const DEFAULT_SYNC_CONFIG = {
+        url: 'https://script.google.com/macros/s/AKfycbzsPupEMjyD6UQF0-MBwjftSCYr45YFbgJDBso_Yb4zoTjvyPzHq1K4iZPvoXdk6m48eA/exec',
+        token: 'Ritesh1205',
+        autoSync: true
+      };
 
-      const SAMPLE_COURSES = [
-        {
-          id: 'sample-1',
-          title: 'Machine Learning Specialization (Andrew Ng)',
-          platform: 'Coursera',
-          category: 'AI & ML',
-          url: 'https://www.coursera.org/specializations/machine-learning-introduction',
-          loginHint: 'Google Login (Personal Gmail)',
-          status: 'In Progress',
-          progress: 45,
-          deadline: futureDateIso(12),
-          certificateUrl: '',
-          pinned: true,
-          notes: 'Completed Supervised ML, currently on Week 2 of Neural Networks.',
-          updatedAt: Date.now() - 86400000 * 2,
-          deleted: false
-        },
-        {
-          id: 'sample-2',
-          title: 'Essence of Linear Algebra',
-          platform: 'YouTube',
-          category: 'Math & Physics',
-          url: 'https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab',
-          loginHint: 'No Login Required (YouTube)',
-          status: 'Completed',
-          progress: 100,
-          deadline: '',
-          certificateUrl: '',
-          pinned: false,
-          notes: 'Great visual intuition for eigenvalues & transformations.',
-          updatedAt: Date.now() - 86400000 * 5,
-          deleted: false
-        },
-        {
-          id: 'sample-3',
-          title: 'Complete Web & React Developer Bootcamp',
-          platform: 'Udemy',
-          category: 'Web Dev',
-          url: 'https://www.udemy.com/',
-          loginHint: 'Email + Bitwarden',
-          status: 'Not Started',
-          progress: 0,
-          deadline: futureDateIso(30),
-          certificateUrl: '',
-          pinned: false,
-          notes: 'Enrolled during sale — start after finishing ML Week 3.',
-          updatedAt: Date.now() - 86400000 * 1,
-          deleted: false
-        }
-      ];
+      const SAMPLE_COURSES = [];
 
       let courses = [];
       let pendingImportCourses = [];
@@ -662,17 +613,21 @@ function doPost(e) {
 
       function loadSyncConfig() {
         const raw = safeGetItem(SYNC_CONFIG_KEY);
-        if (!raw) return;
-        try {
-          const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object') {
-            syncConfig = {
-              url: String(parsed.url || ''),
-              token: String(parsed.token || ''),
-              autoSync: parsed.autoSync !== false
-            };
-          }
-        } catch (e) {}
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+              syncConfig = {
+                url: String(parsed.url || DEFAULT_SYNC_CONFIG.url),
+                token: String(parsed.token || DEFAULT_SYNC_CONFIG.token),
+                autoSync: parsed.autoSync !== false
+              };
+              return;
+            }
+          } catch (e) {}
+        }
+        syncConfig = { ...DEFAULT_SYNC_CONFIG };
+        saveSyncConfig();
       }
 
       function saveSyncConfig() {
@@ -822,20 +777,17 @@ function doPost(e) {
       }
 
       function loadCourses() {
-        const initialized = safeGetItem(INIT_FLAG_KEY);
         const raw = safeGetItem(STORAGE_KEY);
-        if (!initialized && !raw) {
-          courses = SAMPLE_COURSES.slice();
-          saveCoursesLocalOnly();
-          safeSetItem(INIT_FLAG_KEY, 'true');
-          return;
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            const list = Array.isArray(parsed) ? parsed.map(normalizeCourse) : [];
+            // Automatically clean out any old sample dummy courses
+            courses = list.filter(c => !String(c.id).startsWith('sample-'));
+            return;
+          } catch (e) {}
         }
-        try {
-          const parsed = raw ? JSON.parse(raw) : [];
-          courses = Array.isArray(parsed) ? parsed.map(normalizeCourse) : [];
-        } catch (e) {
-          courses = [];
-        }
+        courses = [];
       }
 
       function saveCoursesLocalOnly() {
@@ -1677,7 +1629,9 @@ function doPost(e) {
       // Register PWA Service Worker for offline & standalone install
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch((err) => {
+          navigator.serviceWorker.register('./sw.js').then((reg) => {
+            reg.update();
+          }).catch((err) => {
             console.warn('PWA Service Worker registration skipped:', err);
           });
         });
@@ -1690,7 +1644,7 @@ function doPost(e) {
       renderCourses();
 
       if (isSyncConfigured()) {
-        setSyncStatusUI('synced', 'Synced');
+        setSyncStatusUI('syncing', 'Syncing...');
         if (syncConfig.autoSync) {
           syncWithCloud('pull');
         }
